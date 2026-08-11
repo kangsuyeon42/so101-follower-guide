@@ -1,0 +1,18 @@
+{
+  "name": "follower_home_candidate",
+  "robot_type": "so101_follower",
+  "robot_id": "follower",
+  "port": "/dev/ttyACM0",
+  "units": {
+    "body_joints": "degrees",
+    "gripper": "percent"
+  },
+  "position": {
+    "shoulder_pan": -11.164835164835164,
+    "shoulder_lift": -64.92307692307692,
+    "elbow_flex": 66.1978021978022,
+    "wrist_flex": 73.18681318681318,
+    "wrist_roll": -2.857142857142857,
+    "gripper": 29.773691654879777
+  }
+}
