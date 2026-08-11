@@ -1,4 +1,4 @@
-# SO-101 follower 팔 연결부터 홈 자세 후보 기록까지
+# SO-101 follower 팔 연결 , Home_position 기록
 
 이 문서는 Ubuntu PC에 Feetech USB 컨트롤러와 SO-101 follower 팔 한 대를 연결한 뒤 다음 상태까지 확인하는 과정이다.
 
