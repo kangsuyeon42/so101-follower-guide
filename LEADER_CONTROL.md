@@ -2,6 +2,23 @@
 
 Leader 입력은 raw encoder 값을 follower에 직접 복사하지 않고, 각 팔의 캘리브레이션을 거친 degree/percent 좌표로 전달한다.
 
+## Leader 캘리브레이션
+
+Leader 포트와 전체 모터의 토크가 OFF인지 확인한 뒤 follower와 다른 전용 ID로 캘리브레이션한다.
+
+```bash
+lerobot-calibrate \
+  --teleop.type=so101_leader \
+  --teleop.port=/dev/ttyACM1 \
+  --teleop.id=leader
+```
+
+안내에 따라 관절을 중앙에 놓고, 각 관절을 물리적 충돌이 없는 범위에서 천천히 움직여 가동범위를 기록한다. 결과는 아래 파일에 저장된다.
+
+```text
+~/.cache/huggingface/lerobot/calibration/teleoperators/so_leader/leader.json
+```
+
 ## 입력만 확인
 
 ```bash
