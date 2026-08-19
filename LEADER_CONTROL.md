@@ -27,6 +27,16 @@ python scripts/leader_input_dry_run.py --port /dev/ttyACM1
 
 이 스크립트는 follower에 연결하지 않고 leader의 보정된 관절 입력만 출력한다.
 
+## 홈 후보 기록
+
+공통 시작 자세는 `config/teleop_home_candidate.json`에 정의되어 있다. Follower를 기존 홈 후보에 두고 leader를 실제로 같은 자세에 맞춘 뒤 leader 좌표를 별도로 기록한다.
+
+```bash
+python scripts/capture_leader_home_candidate.py --port /dev/ttyACM1
+```
+
+결과는 `config/leader_home_candidate.json`에 저장된다. 기존 파일은 `--overwrite`를 명시하지 않으면 교체하지 않는다.
+
 ## 단일 관절 추종
 
 ```bash

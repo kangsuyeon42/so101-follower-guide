@@ -1,0 +1,15 @@
+{
+  "name": "teleop_control_home_candidate",
+  "description": "Leader와 follower를 같은 실제 자세로 맞추는 추종 시작 자세",
+  "pose": {
+    "shoulder_pan": "베이스가 거의 정면",
+    "shoulder_lift": "위팔을 살짝 앞으로 내림",
+    "elbow_flex": "팔꿈치를 약 90도로 굽힘",
+    "wrist_flex": "손목 링크가 바닥과 대략 평행",
+    "wrist_roll": "회전 중앙",
+    "gripper": "약 30% 열림"
+  },
+  "follower_home_file": "config/follower_home_candidate.json",
+  "leader_home_file": "config/leader_home_candidate.json",
+  "leader_capture_required": true
+}
