@@ -54,6 +54,11 @@ FOLLOWING_ESTOP_ERROR_DEG = 25.0
 FOLLOWING_ESTOP_TIMEOUT_S = 1.0
 MAX_GRIPPER_OFFSET_PERCENT = 30.0
 GRIPPER_SPEED_PERCENT_S = 10.0
+# A calibrated STS3215 encoder count is about 0.088 deg.  Do not restart the
+# motor's internal trajectory for changes close to one count; keep accumulating
+# the calculated target and send it once the change is clearly meaningful.
+GOAL_SEND_THRESHOLD_DEG = 0.15
+GRIPPER_SEND_THRESHOLD_PERCENT = 0.15
 INPUT_SMOOTHING_TIME_S = 0.12
 WRIST_SPEED_DEG_S = 10.0
 WRIST_FLEX_INDEX = JOINT_NAMES.index("wrist_flex")
@@ -119,9 +124,22 @@ robot = SO101Follower(
 torque_enabled = False
 
 try:
+    if not Path(PORT).exists():
+        raise SystemExit(f"모터 포트를 찾지 못했습니다: {PORT}")
+
     # Deliberately connect only the motor bus. This avoids calibration prompts
     # and prevents robot.connect() from changing configuration unexpectedly.
     robot.bus.connect()
+    torque_state = {
+        name: robot.bus.read("Torque_Enable", name, normalize=False)
+        for name in robot.bus.motors
+    }
+    print("현재 토크 상태:")
+    for name, enabled in torque_state.items():
+        print(f"  {name:14s}: {'ON' if enabled else 'OFF'}")
+    if any(torque_state.values()):
+        raise SystemExit("이미 토크가 켜진 모터가 있어 제어를 시작하지 않습니다.")
+
     present = robot.bus.sync_read("Present_Position", num_retry=2)
     current_joints = np.array([present[name] for name in JOINT_NAMES], dtype=float)
     gripper_position = float(present["gripper"])
@@ -157,6 +175,10 @@ try:
     robot.bus.sync_write("Goal_Position", hold_goal)
     robot.bus.enable_torque()
     torque_enabled = True
+    last_sent_joints = current_joints.copy()
+    last_sent_gripper = gripper_position
+    command_was_active = False
+    goal_send_count = 1
     print("토크 ON — 스틱을 놓으면 현재 위치를 유지합니다.")
 
     last_time = time.monotonic()
@@ -247,6 +269,11 @@ try:
 
         close_pressed = bool(gamepad.get_button(GRIPPER_CLOSE_BUTTON))
         open_pressed = bool(gamepad.get_button(GRIPPER_OPEN_BUTTON))
+        command_is_active = bool(
+            np.any(smoothed_xyz_command != 0.0)
+            or wrist_mode
+            or close_pressed != open_pressed
+        )
         if not motion_paused and close_pressed != open_pressed:
             gripper_direction = -1.0 if close_pressed else 1.0
             gripper_position += gripper_direction * GRIPPER_SPEED_PERCENT_S * dt
@@ -313,12 +340,28 @@ try:
                 for name, value in zip(JOINT_NAMES, current_joints, strict=True)
             }
             goals["gripper.pos"] = gripper_position
-            robot.send_action(goals)
+            joint_goal_change = float(np.max(np.abs(current_joints - last_sent_joints)))
+            gripper_goal_change = abs(gripper_position - last_sent_gripper)
+            # On release, flush the final accumulated sub-threshold remainder
+            # once so that Cartesian state and the held motor goal agree.
+            input_just_released = command_was_active and not command_is_active
+            should_send_goal = bool(
+                joint_goal_change >= GOAL_SEND_THRESHOLD_DEG
+                or gripper_goal_change >= GRIPPER_SEND_THRESHOLD_PERCENT
+                or input_just_released
+            )
+            if should_send_goal:
+                robot.send_action(goals)
+                last_sent_joints = current_joints.copy()
+                last_sent_gripper = gripper_position
+                goal_send_count += 1
             status = "LIMIT" if step_scale < 1.0 else "OK"
         else:
             # Discard an unsafe target and stay at the last commanded pose.
             target_pose = kinematics.forward_kinematics(current_joints)
             status = "REJECT"
+
+        command_was_active = command_is_active
 
         if now - last_feedback_time >= 0.25:
             feedback = robot.bus.sync_read("Present_Position", num_retry=2)
@@ -352,6 +395,7 @@ try:
                 f"gripper={gripper_position:5.1f}%  "
                 f"raw_step={raw_max_step:5.2f} deg  "
                 f"follow={following_error:4.2f} deg  "
+                f"tx={goal_send_count:5d}  "
                 f"{'PAUSE' if motion_paused else ('WRIST' if wrist_mode else 'XYZ'):5s} "
                 f"{status:6s}",
                 end="",

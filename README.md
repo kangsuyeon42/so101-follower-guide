@@ -1,4 +1,25 @@
-# SO-101 
+# SO-101 Follower 제어 기록
+
+## 현재 상태
+
+- Follower와 leader 모두 모터 ID 1~6 및 위치 읽기 확인
+- Follower 기존 캘리브레이션과 홈 후보 유지
+- Leader 전용 캘리브레이션 및 입력 dry-run 완료
+- 보정 좌표를 사용한 `shoulder_pan` 저속 추종 확인
+- 최종 소프트 바닥 `z=-33.2mm` 유지
+
+제어 방식은 두 갈래로 보관한다.
+
+- **Leader 추종:** `leader_input_dry_run.py`로 입력을 확인한 뒤
+  `leader_single_joint_test.py`로 단일 관절부터 확장한다.
+- **게임패드 제어:** 기존 `gamepad_forward_back_test.py`를 유지한다. XYZ 이동,
+  손목, 그리퍼 제어와 소프트 바닥 및 workspace 제한이 적용되어 있다.
+
+다음 단계는 leader/follower의 나머지 관절 방향을 확인하고, 몸통 3축 → 손목
+2축 → 그리퍼 순서로 추종 범위를 늘리는 것이다. 실제 실행 전에는 USB 포트와
+양쪽 팔의 토크 상태를 항상 다시 확인한다.
+
+---
 
 이 문서는 Ubuntu PC에 Feetech USB 컨트롤러와 SO-101 follower 팔 한 대를 연결한 뒤 다음 상태까지 확인하는 과정이다.
 
@@ -391,6 +412,19 @@ python scripts/set_motor_acceleration.py
 3. 관절 목표에 별도 속도·가속도 필터를 적용한다.
 4. 그 뒤에도 떨리면 P/D 값을 한 항목씩 비교한다.
 
+### Goal_Position 미세 명령 누적
+
+`scripts/gamepad_forward_back_test.py`는 더 이상 계산된 목표를 무조건 20Hz로
+전송하지 않는다. 관절 목표는 마지막 전송값에서 `0.15°`, 그리퍼는 `0.15%`
+이상 달라질 때까지 작은 변화를 누적한다. 게임패드 입력을 놓는 순간에는 남은
+변화를 한 번 전송해 최종 목표를 일치시킨다. 화면의 `tx`는 실제 목표 전송
+횟수이므로, 같은 동작에서 기존 20Hz 연속 전송보다 얼마나 줄었는지 확인할 수
+있다.
+
+실기 시험 전에는 스크립트가 `/dev/ttyACM0` 존재 여부와 각 모터의 현재 토크
+상태를 먼저 출력한다. 모터 하나라도 이미 토크가 켜져 있으면 기존 목표를 쓰거나
+토크 상태를 바꾸지 않고 중단한다. 포트가 없는 상태에서는 실행하지 않는다.
+
 ## 현재까지 확인한 것
 
 - [x] SO-101 follower 팔 확인
@@ -413,7 +447,7 @@ python scripts/set_motor_acceleration.py
 - [x] 실제 설치 기준 소프트 바닥 기록
 - [x] Options 비상정지
 - [x] 가속도 3, 8, 50 비교
-- [ ] Goal_Position 스트리밍으로 인한 부들거림 개선
+- [ ] Goal_Position 미세 명령 누적 적용 후 부들거림 실기 비교
 - [ ] 가벼운 물체 집기 반복 시험
 
 ## 참고: 관련 LeRobot 코드

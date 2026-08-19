@@ -36,9 +36,22 @@ robot = SO101Follower(
 torque_enabled = False
 
 try:
+    if not Path(PORT).exists():
+        raise SystemExit(f"모터 포트를 찾지 못했습니다: {PORT}")
+
     # Connect only to the bus so this script does not start calibration or
     # rewrite the motor configuration.
     robot.bus.connect()
+    torque_state = {
+        name: robot.bus.read("Torque_Enable", name, normalize=False)
+        for name in robot.bus.motors
+    }
+    print("현재 토크 상태:")
+    for name, enabled in torque_state.items():
+        print(f"  {name:14s}: {'ON' if enabled else 'OFF'}")
+    if any(torque_state.values()):
+        raise SystemExit("이미 토크가 켜진 모터가 있어 홈 이동을 시작하지 않습니다.")
+
     present = robot.bus.sync_read("Present_Position", num_retry=2)
     start = {name: float(present[name]) for name in robot.bus.motors}
 
