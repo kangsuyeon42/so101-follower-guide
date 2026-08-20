@@ -8,11 +8,11 @@
     "gripper": "percent"
   },
   "position": {
-    "shoulder_pan": -11.164835164835164,
-    "shoulder_lift": -64.92307692307692,
-    "elbow_flex": 66.1978021978022,
-    "wrist_flex": 73.18681318681318,
-    "wrist_roll": -2.857142857142857,
-    "gripper": 29.773691654879777
+    "shoulder_pan": -4.747252747252747,
+    "shoulder_lift": -79.07692307692308,
+    "elbow_flex": 95.91208791208791,
+    "wrist_flex": 90.15384615384616,
+    "wrist_roll": -2.681318681318681,
+    "gripper": 0.9193776520509194
   }
 }

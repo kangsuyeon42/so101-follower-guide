@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Move an SO-101 slowly from its present pose to the saved home candidate."""
 
+import argparse
 import json
 import time
 from pathlib import Path
@@ -12,11 +13,30 @@ from lerobot.robots.so_follower import SO101Follower, SO101FollowerConfig
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 HOME_FILE = PROJECT_DIR / "config" / "follower_home_candidate.json"
-PORT = "/dev/ttyACM0"
 ROBOT_ID = "follower"
 LOOP_HZ = 20
-MAX_JOINT_SPEED_DEG_S = 3.0
-MAX_GRIPPER_SPEED_PERCENT_S = 5.0
+DEFAULT_MAX_JOINT_SPEED_DEG_S = 15.0
+DEFAULT_MAX_GRIPPER_SPEED_PERCENT_S = 25.0
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--port", default="/dev/ttyACM0")
+parser.add_argument(
+    "--joint-speed",
+    type=float,
+    default=DEFAULT_MAX_JOINT_SPEED_DEG_S,
+    help="body-joint peak speed limit in deg/s (default: %(default)s)",
+)
+parser.add_argument(
+    "--gripper-speed",
+    type=float,
+    default=DEFAULT_MAX_GRIPPER_SPEED_PERCENT_S,
+    help="gripper peak speed limit in percent/s (default: %(default)s)",
+)
+args = parser.parse_args()
+
+if args.joint_speed <= 0 or args.gripper_speed <= 0:
+    parser.error("속도 제한은 0보다 커야 합니다.")
 
 
 with HOME_FILE.open() as file:
@@ -26,7 +46,7 @@ target = {name: float(value) for name, value in home_data["position"].items()}
 
 robot = SO101Follower(
     SO101FollowerConfig(
-        port=PORT,
+        port=args.port,
         id=ROBOT_ID,
         use_degrees=True,
         disable_torque_on_disconnect=True,
@@ -36,8 +56,8 @@ robot = SO101Follower(
 torque_enabled = False
 
 try:
-    if not Path(PORT).exists():
-        raise SystemExit(f"모터 포트를 찾지 못했습니다: {PORT}")
+    if not Path(args.port).exists():
+        raise SystemExit(f"모터 포트를 찾지 못했습니다: {args.port}")
 
     # Connect only to the bus so this script does not start calibration or
     # rewrite the motor configuration.
@@ -61,16 +81,20 @@ try:
         print(f"  {name:14s}: {start[name]:+8.3f} -> {target[name]:+8.3f} {unit}")
 
     joint_durations = [
-        abs(target[name] - start[name]) / MAX_JOINT_SPEED_DEG_S
+        abs(target[name] - start[name]) / args.joint_speed
         for name in robot.bus.motors
         if name != "gripper"
     ]
-    gripper_duration = abs(target["gripper"] - start["gripper"]) / MAX_GRIPPER_SPEED_PERCENT_S
+    gripper_duration = abs(target["gripper"] - start["gripper"]) / args.gripper_speed
     # Smoothstep's peak speed is 1.5 times its average speed, so lengthen the
     # move accordingly to keep the actual peak below the configured limits.
-    duration = 1.5 * max(1.0, *joint_durations, gripper_duration)
+    duration = 1.5 * max(0.5, *joint_durations, gripper_duration)
 
-    print(f"\n예상 이동 시간: {duration:.1f}초")
+    print(
+        f"\n속도 제한: 몸통 {args.joint_speed:.1f} deg/s, "
+        f"그리퍼 {args.gripper_speed:.1f} %/s"
+    )
+    print(f"예상 이동 시간: {duration:.1f}초")
     print("이동 중 Ctrl+C를 누르면 토크를 해제하고 종료합니다.")
     input("팔 주변과 아래를 비우고, 팔을 받을 준비가 됐다면 ENTER: ")
 

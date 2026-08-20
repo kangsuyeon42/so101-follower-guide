@@ -5,6 +5,17 @@
 - [Leader 추종](LEADER_CONTROL.md)
 - [게임패드 제어](GAMEPAD_CONTROL.md)
 
+Leader와 Follower를 모두 연결해 바로 시작하려면 [Leader 추종](LEADER_CONTROL.md)을
+위에서부터 순서대로 따른다. 최종 텔레오퍼레이션 명령은 다음과 같다.
+
+```bash
+conda activate lerobot
+cd /home/suyeon/so101-follower-guide
+python scripts/leader_teleoperation.py \
+  --leader-port /dev/ttyACM1 \
+  --follower-port /dev/ttyACM0
+```
+
 이 README는 follower 연결, 캘리브레이션과 홈 자세 설정을 다룬다.
 
 - Ubuntu에서 USB 직렬 포트 접근
@@ -234,6 +245,14 @@ config/follower_home_candidate.json
 
 이 값은 아래의 안전한 홈 복귀 스크립트에서 사용한다.
 
+현재 토크가 OFF인 follower 자세로 기존 홈 후보를 교체하려면 다음을 실행한다.
+
+```bash
+python scripts/capture_follower_home_candidate.py --port /dev/ttyACM0
+```
+
+표시된 보정 좌표와 실제 자세를 확인한 뒤 Enter를 눌러야 파일을 교체한다.
+
 ## 9. 홈 후보로 천천히 복귀하기
 
 팔 베이스를 책상에 단단히 고정하고 팔 아래를 비운다. 다음 스크립트는 현재 위치를 먼저 읽고, 그 위치를 목표값으로 기록한 뒤 토크를 켠다. 오래된 모터 목표값으로 갑자기 움직이는 것을 막기 위한 순서다.
@@ -242,18 +261,13 @@ config/follower_home_candidate.json
 python scripts/move_to_home_candidate.py
 ```
 
+기본 몸통 관절 최고속도는 `15 deg/s`, 그리퍼는 `25 %/s`다. 더 느린 복귀가
+필요하면 `--joint-speed 3 --gripper-speed 5`처럼 실행한다.
+
 홈 후보까지 부드러운 보간으로 이동한 뒤 실제 도착 위치와 오차를 출력한다. 자세를 확인할 때까지 토크를 유지하며, 마지막 Enter를 누르면 토크를 해제한다. 토크가 풀리면 팔이 내려올 수 있으므로 반드시 팔을 받을 준비를 한다.
 
-기록된 홈 후보:
-
-```text
-shoulder_pan   -11.165 deg
-shoulder_lift  -64.923 deg
-elbow_flex     +66.198 deg
-wrist_flex     +73.187 deg
-wrist_roll      -2.857 deg
-gripper        +29.774 %
-```
+현재 홈 좌표는 자세를 다시 기록할 때마다 달라진다. 정확한 값은
+`config/follower_home_candidate.json`을 확인한다.
 
 ## 참고: 관련 LeRobot 코드
 
