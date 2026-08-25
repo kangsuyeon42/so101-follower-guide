@@ -16,6 +16,42 @@ python scripts/leader_teleoperation.py \
   --follower-port /dev/ttyACM0
 ```
 
+## 손목 카메라 파일럿 에피소드 기록
+
+모터를 연결하지 않고 손목 카메라가 정상 동작하는지 먼저 확인한다.
+
+```bash
+python scripts/test_wrist_camera.py
+```
+
+6축 텔레오퍼레이션 중 학습용 파일럿 에피소드 하나를 기록하려면 다음 명령을
+실행한다. 아래 예시는 20초 동안 관절 상태, follower 명령과 손목 카메라 영상을
+20 FPS로 기록한다.
+
+```bash
+python scripts/leader_teleoperation.py \
+  --leader-port /dev/ttyACM1 \
+  --follower-port /dev/ttyACM0 \
+  --record-one-episode \
+  --episode-seconds 20 \
+  --task "Pick up the object and place it to the right."
+```
+
+결과는 `outputs/datasets/so101_wrist_pilot_YYYYMMDD_HHMMSS/`에 저장된다.
+데이터셋에는 Parquet 형식의 동작 데이터와 MP4 형식의 손목 영상이 포함된다.
+`outputs/`는 로컬 수집 데이터이므로 Git에서 추적하지 않는다.
+
+LeRobot이 생성한 영상은 AV1 코덱을 사용할 수 있다. Ubuntu 기본 플레이어에
+AV1 디코더가 없으면 `ffplay`로 재생하거나, 확인용 H.264 사본을 만든다.
+
+```bash
+ffplay outputs/datasets/<dataset>/videos/observation.images.wrist/chunk-000/file-000.mp4
+
+ffmpeg -i outputs/datasets/<dataset>/videos/observation.images.wrist/chunk-000/file-000.mp4 \
+  -c:v libx264 -crf 18 -pix_fmt yuv420p \
+  outputs/datasets/<dataset>/videos/observation.images.wrist/chunk-000/file-000-h264.mp4
+```
+
 이 README는 follower 연결, 캘리브레이션과 홈 자세 설정을 다룬다.
 
 - Ubuntu에서 USB 직렬 포트 접근

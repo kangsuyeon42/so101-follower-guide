@@ -4,14 +4,19 @@
 import argparse
 import json
 import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import scservo_sdk as scs
 
+from lerobot.cameras.opencv import OpenCVCameraConfig
+from lerobot.datasets import LeRobotDataset
 from lerobot.robots.so_follower import SO101Follower, SO101FollowerConfig
 from lerobot.teleoperators.so_leader import SO101Leader, SO101LeaderConfig
 from lerobot.model.kinematics import RobotKinematics
+from lerobot.utils.constants import ACTION, OBS_STR
+from lerobot.utils.feature_utils import build_dataset_frame, hw_to_dataset_features
 
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
@@ -22,6 +27,10 @@ FOLLOWER_CALIBRATION_FILE = (
     / ".cache/huggingface/lerobot/calibration/robots/so_follower/follower.json"
 )
 URDF_FILE = Path.home() / "SO-ARM100/Simulation/SO101/so101_new_calib.urdf"
+WRIST_CAMERA_PATH = Path(
+    "/dev/v4l/by-id/"
+    "usb-Innomaker_Innomaker-U20CAM-1080p-S1_SN0001-video-index0"
+)
 BODY_JOINTS = ["shoulder_pan", "shoulder_lift", "elbow_flex"]
 ALL_JOINTS = BODY_JOINTS + ["wrist_flex", "wrist_roll", "gripper"]
 MOTOR_IDS = range(1, 7)
@@ -41,7 +50,20 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--leader-port", default="/dev/ttyACM1")
 parser.add_argument("--follower-port", default="/dev/ttyACM0")
 parser.add_argument("--mode", choices=["body", "full", "teleop"], default="body")
+parser.add_argument("--record-one-episode", action="store_true")
+parser.add_argument("--episode-seconds", type=float, default=20.0)
+parser.add_argument(
+    "--task",
+    default="Pick up the object and place it to the right.",
+)
 args = parser.parse_args()
+
+if args.episode_seconds <= 0:
+    parser.error("--episode-seconds는 0보다 커야 합니다.")
+if args.record_one_episode and args.mode != "teleop":
+    parser.error("에피소드 기록은 --mode teleop에서만 지원합니다.")
+if args.record_one_episode and not WRIST_CAMERA_PATH.exists():
+    parser.error(f"손목 카메라를 찾지 못했습니다: {WRIST_CAMERA_PATH}")
 
 tracked_joints = BODY_JOINTS if args.mode == "body" else ALL_JOINTS
 
@@ -165,19 +187,52 @@ if args.mode == "teleop":
 leader = SO101Leader(
     SO101LeaderConfig(port=args.leader_port, id="leader", use_degrees=True)
 )
+camera_config = {}
+if args.record_one_episode:
+    camera_config["wrist"] = OpenCVCameraConfig(
+        index_or_path=WRIST_CAMERA_PATH,
+        width=1280,
+        height=720,
+        fps=30,
+        fourcc="MJPG",
+    )
 follower = SO101Follower(
     SO101FollowerConfig(
         port=args.follower_port,
         id="follower",
         use_degrees=True,
         disable_torque_on_disconnect=True,
+        cameras=camera_config,
     )
 )
 follower_torque_enable_attempted = False
+dataset = None
+dataset_frame_count = 0
+dataset_root = None
+
+if args.record_one_episode:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dataset_root = PROJECT_DIR / "outputs" / "datasets" / f"so101_wrist_pilot_{timestamp}"
+    dataset_features = {
+        **hw_to_dataset_features(follower.action_features, ACTION, use_video=True),
+        **hw_to_dataset_features(follower.observation_features, OBS_STR, use_video=True),
+    }
+    dataset = LeRobotDataset.create(
+        repo_id="local/so101_wrist_pilot",
+        fps=LOOP_HZ,
+        root=dataset_root,
+        robot_type=follower.name,
+        features=dataset_features,
+        use_videos=True,
+        image_writer_processes=0,
+        image_writer_threads=4,
+    )
 
 try:
     connect_bus_with_retry(leader.bus, "Leader")
     connect_bus_with_retry(follower.bus, "Follower")
+    for camera in follower.cameras.values():
+        camera.connect()
 
     follower_present = follower.bus.sync_read("Present_Position", num_retry=2)
     follower_home_errors = {
@@ -251,6 +306,10 @@ try:
         print("  홈 기준 별도 소프트 이동 범위 제한 없음")
         print("  Follower 속도: 몸통/손목 30.0 deg/s, 그리퍼 60.0 %/s")
         print(f"  소프트 바닥: URDF base z={SOFT_FLOOR_Z_M * 1000:.1f} mm")
+        if dataset is not None:
+            print(f"  기록 시간: {args.episode_seconds:.1f}초")
+            print(f"  작업 문장: {args.task}")
+            print(f"  저장 위치: {dataset_root}")
     print("  Ctrl+C: follower 토크 해제 후 종료")
     input("두 팔 주변을 비우고 follower를 받을 준비 후 ENTER: ")
 
@@ -263,9 +322,13 @@ try:
     last_feedback_time = 0.0
     excessive_error_since = {name: None for name in tracked_joints}
     following_errors = {name: 0.0 for name in tracked_joints}
+    recording_started_at = time.monotonic()
 
     while True:
         now = time.monotonic()
+        if dataset is not None and now - recording_started_at >= args.episode_seconds:
+            print("\n에피소드 기록 시간 완료")
+            break
         dt = min(now - last_time, 0.1)
         last_time = now
 
@@ -342,8 +405,29 @@ try:
             follower.bus.sync_write("Goal_Position", goals_to_send)
             last_sent_goal.update(goals_to_send)
 
-        if now - last_feedback_time >= 0.25:
+        actual = None
+        if dataset is not None or now - last_feedback_time >= 0.25:
             actual = follower.bus.sync_read("Present_Position", num_retry=2)
+        if dataset is not None:
+            observation = {
+                f"{name}.pos": float(actual[name]) for name in ALL_JOINTS
+            }
+            observation["wrist"] = follower.cameras["wrist"].read()
+            action = {
+                f"{name}.pos": float(follower_goal[name]) for name in ALL_JOINTS
+            }
+            observation_frame = build_dataset_frame(
+                dataset.features, observation, prefix=OBS_STR
+            )
+            action_frame = build_dataset_frame(
+                dataset.features, action, prefix=ACTION
+            )
+            dataset.add_frame(
+                {**observation_frame, **action_frame, "task": args.task}
+            )
+            dataset_frame_count += 1
+
+        if now - last_feedback_time >= 0.25:
             for name in tracked_joints:
                 error = abs(float(actual[name]) - follower_goal[name])
                 following_errors[name] = error
@@ -380,6 +464,16 @@ finally:
             except Exception as error:
                 print(f"경고: follower 토크 해제 명령 실패: {error}")
         follower.bus.disconnect(disable_torque=False)
+    for camera in follower.cameras.values():
+        if camera.is_connected:
+            camera.disconnect()
     if leader.is_connected:
         leader.bus.disconnect(disable_torque=False)
+    if dataset is not None:
+        if dataset_frame_count:
+            print(f"에피소드 저장 중: {dataset_frame_count} frames")
+            dataset.save_episode()
+        dataset.finalize()
+        if dataset_frame_count:
+            print(f"데이터셋 저장 완료: {dataset_root}")
     print("연결 종료")
