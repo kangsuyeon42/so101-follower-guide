@@ -4,6 +4,8 @@
 
 - [Leader 추종](LEADER_CONTROL.md)
 - [게임패드 제어](GAMEPAD_CONTROL.md)
+- [LeKiwi 키보드 주행](LEKIWI_KEYBOARD_DRIVE.md)
+- [다음 세션 인수인계 프롬프트](NEXT_SESSION_PROMPT.md)
 
 Leader와 Follower를 모두 연결해 바로 시작하려면 [Leader 추종](LEADER_CONTROL.md)을
 위에서부터 순서대로 따른다. 최종 텔레오퍼레이션 명령은 다음과 같다.
