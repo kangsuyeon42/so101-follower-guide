@@ -1,0 +1,25 @@
+diff --git a/src/lerobot/robots/lekiwi/lekiwi.py b/src/lerobot/robots/lekiwi/lekiwi.py
+--- a/src/lerobot/robots/lekiwi/lekiwi.py
++++ b/src/lerobot/robots/lekiwi/lekiwi.py
+@@ -262,7 +262,10 @@ class LeKiwi(Robot):
+         # Convert rotational velocity from deg/s to rad/s.
+         theta_rad = theta * (np.pi / 180.0)
+         # Create the body velocity vector [x, y, theta_rad].
+-        velocity_vector = np.array([x, y, theta_rad])
++        # The physical LeKiwi front is the side between wheels 7 and 9. The
++        # mounting convention used here has its model x-axis reversed from
++        # that physical direction, so flip x at the kinematics boundary.
++        velocity_vector = np.array([-x, y, theta_rad])
+ 
+         # Define the wheel mounting angles with a -90° offset.
+         angles = np.radians(np.array([240, 0, 120]) - 90)
+@@ -335,7 +338,8 @@ class LeKiwi(Robot):
+         # Solve the inverse kinematics: body_velocity = M⁻¹ · wheel_linear_speeds.
+         m_inv = np.linalg.inv(m)
+         velocity_vector = m_inv.dot(wheel_linear_speeds)
+-        x, y, theta_rad = velocity_vector
++        model_x, y, theta_rad = velocity_vector
++        x = -model_x
+         theta = theta_rad * (180.0 / np.pi)
+         return {
+             "x.vel": x,
