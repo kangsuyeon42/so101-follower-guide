@@ -230,6 +230,28 @@ python scripts/leader_teleoperation.py \
   --follower-port /dev/ttyACM0
 ```
 
+팔을 LeKiwi처럼 기존 탁상 설치면보다 높은 곳에 장착하면, 기존 소프트 바닥
+`z=-0.0332 m`가 정상적인 하강 동작을 막을 수 있다. 실제 설치 높이를 아직
+측정하지 않았다면 주변과 차체를 완전히 비운 짧은 시험에서만 바닥 제한을 끈다.
+관절 캘리브레이션 끝점 제한과 추종 오차 E-stop은 계속 유지된다.
+
+```bash
+python scripts/leader_teleoperation.py \
+  --leader-port /dev/ttyACM1 \
+  --follower-port /dev/ttyACM0 \
+  --disable-soft-floor
+```
+
+팔 베이스 원점에서 실제 바닥까지의 수직 거리를 측정했다면, 아래처럼 바닥의
+base-frame z 좌표를 미터 단위 음수로 지정하는 편이 더 안전하다.
+
+```bash
+python scripts/leader_teleoperation.py \
+  --leader-port /dev/ttyACM1 \
+  --follower-port /dev/ttyACM0 \
+  --soft-floor-z-m -0.20
+```
+
 스크립트가 먼저 확인하는 항목:
 
 - Leader와 Follower 포트가 서로 다른지

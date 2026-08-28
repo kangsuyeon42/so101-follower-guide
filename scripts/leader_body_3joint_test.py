@@ -53,6 +53,20 @@ parser.add_argument("--mode", choices=["body", "full", "teleop"], default="body"
 parser.add_argument("--record-one-episode", action="store_true")
 parser.add_argument("--episode-seconds", type=float, default=20.0)
 parser.add_argument(
+    "--soft-floor-z-m",
+    type=float,
+    default=SOFT_FLOOR_Z_M,
+    help=(
+        "end-effector floor limit in the arm-base frame, in meters "
+        "(default: %(default)s)"
+    ),
+)
+parser.add_argument(
+    "--disable-soft-floor",
+    action="store_true",
+    help="disable only the Cartesian floor limit (joint limits remain active)",
+)
+parser.add_argument(
     "--task",
     default="Pick up the object and place it to the right.",
 )
@@ -305,7 +319,13 @@ try:
     else:
         print("  홈 기준 별도 소프트 이동 범위 제한 없음")
         print("  Follower 속도: 몸통/손목 30.0 deg/s, 그리퍼 60.0 %/s")
-        print(f"  소프트 바닥: URDF base z={SOFT_FLOOR_Z_M * 1000:.1f} mm")
+        if args.disable_soft_floor:
+            print("  소프트 바닥: OFF (관절 캘리브레이션 끝점 제한은 유지)")
+        else:
+            print(
+                "  소프트 바닥: "
+                f"URDF base z={args.soft_floor_z_m * 1000:.1f} mm"
+            )
         if dataset is not None:
             print(f"  기록 시간: {args.episode_seconds:.1f}초")
             print(f"  작업 문장: {args.task}")
@@ -378,18 +398,24 @@ try:
                 ALL_JOINTS[:-1], proposed_joints, strict=True
             ):
                 proposed_goal[name] = float(value)
-            proposed_pose = kinematics.forward_kinematics(proposed_joints)
-            above_floor = bool(proposed_pose[2, 3] >= SOFT_FLOOR_Z_M)
-            if not above_floor:
-                # Keep axes that cannot lower the end effector responsive.
-                # Revert only the pitch-chain joints responsible for z.
-                for name in ("shoulder_lift", "elbow_flex", "wrist_flex"):
-                    proposed_goal[name] = follower_goal[name]
-                proposed_joints = np.array(
-                    [proposed_goal[name] for name in ALL_JOINTS[:-1]], dtype=float
-                )
+            above_floor = True
+            if not args.disable_soft_floor:
                 proposed_pose = kinematics.forward_kinematics(proposed_joints)
-                above_floor = bool(proposed_pose[2, 3] >= SOFT_FLOOR_Z_M)
+                above_floor = bool(
+                    proposed_pose[2, 3] >= args.soft_floor_z_m
+                )
+                if not above_floor:
+                    # Keep axes that cannot lower the end effector responsive.
+                    # Revert only the pitch-chain joints responsible for z.
+                    for name in ("shoulder_lift", "elbow_flex", "wrist_flex"):
+                        proposed_goal[name] = follower_goal[name]
+                    proposed_joints = np.array(
+                        [proposed_goal[name] for name in ALL_JOINTS[:-1]], dtype=float
+                    )
+                    proposed_pose = kinematics.forward_kinematics(proposed_joints)
+                    above_floor = bool(
+                        proposed_pose[2, 3] >= args.soft_floor_z_m
+                    )
             if above_floor:
                 follower_goal = proposed_goal
         else:
