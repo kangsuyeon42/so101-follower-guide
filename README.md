@@ -1,10 +1,8 @@
 # SO-101 + LeKiwi Mobile Manipulation
 
-SO-101 Leader/Follower와 LeKiwi를 결합해 이동, 물체 조작, 데이터 수집과
-학습까지 구현하는 모바일 매니퓰레이션 프로젝트다.
+SO-101 Leader/Follower와 LeKiwi를 결합한 모바일 매니퓰레이션 프로젝트
 
-목표 작업은 LeKiwi가 물체까지 이동하고 SO-101 팔로 물체를 집어 오른쪽에
-놓는 것이다.
+목표: LeKiwi로 물체까지 이동 → SO-101 팔로 물체 파지 → 오른쪽에 배치
 
 > Drive to the object, pick it up, and place it to the right.
 
@@ -25,7 +23,7 @@ SO-101 Leader/Follower와 LeKiwi를 결합해 이동, 물체 조작, 데이터 �
 | 노트북 | Leader arm, LeKiwi client, 데이터 저장 |
 | GPU PC 또는 서버 | SmolVLA 파인튜닝 |
 
-노트북과 Raspberry Pi는 Ethernet으로 직접 연결한다.
+노트북과 Raspberry Pi Ethernet 직접 연결
 
 ```text
 노트북  10.42.0.1
@@ -57,8 +55,8 @@ SSH     ssh moai5@10.42.0.2
 
 ### SO-101 Leader/Follower
 
-실행 전 두 팔의 포트, 자세와 토크 상태를 먼저 확인한다. 초기 설정부터 시작할
-때는 [Leader/Follower 제어](LEADER_CONTROL.md)를 순서대로 따른다.
+실행 전 두 팔의 포트, 자세와 토크 상태 확인. 초기 설정은
+[Leader/Follower 제어](LEADER_CONTROL.md)를 위에서부터 순서대로 진행
 
 ```bash
 conda activate lerobot
@@ -68,48 +66,50 @@ python scripts/leader_teleoperation.py \
   --follower-port /dev/ttyACM0
 ```
 
-종료는 `Ctrl+C`다. 종료 후 Follower 토크가 풀리므로 팔을 받을 준비를 한다.
+종료: `Ctrl+C`. Follower 토크 해제에 대비해 팔을 받을 준비
 
 ### LeKiwi 키보드 주행
 
-Pi에서 host를 먼저 실행한다.
+Pi에서 host 먼저 실행
 
 ```bash
 conda activate lerobot
 bash ~/start_lekiwi_host_no_cameras.sh 600
 ```
 
-노트북의 새 터미널에서 client를 실행한다.
+노트북의 새 터미널에서 client 실행
 
 ```bash
 conda activate lerobot
 python ~/so101-follower-guide/scripts/lekiwi_keyboard_drive.py
 ```
 
-`W/A/S/D`로 이동하고 `Space`로 즉시 정지한다. `Esc`는 정지 명령을 보낸 뒤
-client를 종료한다. 자세한 조작법과 축 패치는
-[LeKiwi 키보드 주행](LEKIWI_KEYBOARD_DRIVE.md)을 참고한다.
+- 이동: `W/A/S/D`
+- 즉시 정지: `Space`
+- 정지 명령 후 client 종료: `Esc`
+- 자세한 조작법과 축 패치: [LeKiwi 키보드 주행](LEKIWI_KEYBOARD_DRIVE.md)
 
 ## 데이터 수집 방향
 
-최종 LeRobotDataset은 다음 정보를 같은 프레임 기준으로 기록한다.
+최종 LeRobotDataset에 같은 프레임 기준으로 기록할 항목
 
 - 손목 및 전면 카메라 observation
 - SO-101 팔 6축 action/state
 - LeKiwi 베이스 `x.vel`, `y.vel`, `theta.vel`
 - 자연어 작업 문장
 
-50개 이상의 고품질 통합 에피소드를 목표로 한다. 최초 10개는 정책 학습보다
-데이터 구조, 영상, 타임스탬프와 observation/action 정합성 검증에 사용한다.
+- 목표: 고품질 통합 에피소드 50개 이상
+- 최초 10개: 정책 학습보다 데이터 구조, 영상, 타임스탬프와
+  observation/action 정합성 검증에 사용
 
 ## 안전 원칙
 
-- Raspberry Pi 전원과 12V 모터 전원을 분리한다.
-- 전압, 극성과 전원 분배선 연결을 추측하지 않는다.
-- 모터 ID를 변경하거나 기존 캘리브레이션을 덮어쓰지 않는다.
-- 실제 팔이나 바퀴를 움직이기 전에 예상 동작과 종료 방법을 확인한다.
-- 카메라 연결 후 Pi가 재부팅되거나 Ethernet이 끊기면 재연결을 반복하지 않는다.
-- 현재 전원 구성에서는 RealSense와 다른 USB 카메라를 동시에 연결하지 않는다.
+- Raspberry Pi 전원과 12V 모터 전원 분리
+- 확인되지 않은 전압, 극성과 전원 분배선 연결 금지
+- 모터 ID 변경 및 기존 캘리브레이션 덮어쓰기 금지
+- 실제 팔이나 바퀴 구동 전 예상 동작과 종료 방법 확인
+- 카메라 연결 후 Pi 재부팅 또는 Ethernet 단절 시 반복 재연결 금지
+- 현재 전원 구성에서 RealSense와 다른 USB 카메라 동시 연결 금지
 
 ## 주요 환경
 
@@ -120,5 +120,4 @@ client를 종료한다. 자세한 조작법과 축 패치는
 - SO-101 Leader/Follower
 - LeKiwi
 
-프로젝트별 경로와 정확한 장치 상태는
-[다음 세션 인수인계](NEXT_SESSION_PROMPT.md)에 기록한다.
+프로젝트 경로와 상세 장치 상태: [다음 세션 인수인계](NEXT_SESSION_PROMPT.md)
