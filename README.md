@@ -142,21 +142,13 @@ so101-follower-guide/
 | [게임패드 제어](GAMEPAD_CONTROL.md) | IK 기반 Follower 제어와 모터 튜닝 기록 |
 | [LeKiwi 키보드 주행](LEKIWI_KEYBOARD_DRIVE.md) | Pi host, 노트북 client와 WASD 주행 |
 | [데이터 수집](DATA_COLLECTION.md) | 손목 카메라 점검과 파일럿 에피소드 기록 |
-| [스크립트 전체 설명](scripts/README.md) | 27개 스크립트의 용도, 안전 구분과 실행 예시 |
+| [스크립트 전체 설명](scripts/README.md) | 27개 스크립트의 용도와 실행 예시 |
 | [다음 세션 인수인계](NEXT_SESSION_PROMPT.md) | 검증된 환경, 장치 상태와 다음 작업 시작점 |
 
 ## 스크립트 한눈에 보기
 
 VS Code의 `scripts/` 폴더에 있는 실행 파일 전체 목록. 파일명을 누르면 GitHub에서
 원본 코드 확인 가능
-
-표시 기준:
-
-- **읽기**: 모터 명령과 설정 변경 없이 상태 확인
-- **계산**: 모터 포트를 열지 않는 FK, IK 또는 입력 시험
-- **기록**: 로컬 JSON, Parquet 또는 MP4 파일 생성
-- **구동**: 실제 torque 활성화 또는 팔·바퀴 움직임 발생
-- **변경**: 모터 레지스터 값 변경
 
 모든 노트북 명령의 기본 실행 위치:
 
@@ -167,14 +159,14 @@ cd ~/so101-follower-guide
 
 ### 모터 및 캘리브레이션 점검
 
-| 파일 | 구분 | 실행 | 용도 |
-| --- | --- | --- | --- |
-| [`scan_motor_ids.py`](scripts/scan_motor_ids.py) | 읽기 | `python scripts/scan_motor_ids.py --port /dev/ttyACM0` | SO-101 Feetech ID 1~20 ping |
-| [`scan_lekiwi_motor_ids.py`](scripts/scan_lekiwi_motor_ids.py) | 읽기 | `python -u scripts/scan_lekiwi_motor_ids.py` | LeKiwi 팔·바퀴 ID 1~9 ping |
-| [`read_raw_positions.py`](scripts/read_raw_positions.py) | 읽기 | `python scripts/read_raw_positions.py --port /dev/ttyACM0` | Raw encoder와 torque 상태 출력 |
-| [`read_calibrated_positions.py`](scripts/read_calibrated_positions.py) | 읽기 | `python scripts/read_calibrated_positions.py` | LeRobot 보정 좌표를 degree/percent로 출력 |
-| [`check_lekiwi_calibration_match.py`](scripts/check_lekiwi_calibration_match.py) | 읽기 | `python scripts/check_lekiwi_calibration_match.py` | Calibration 파일과 모터 레지스터 비교 |
-| [`inspect_motor_tuning.py`](scripts/inspect_motor_tuning.py) | 읽기 | `python scripts/inspect_motor_tuning.py` | Acceleration, velocity와 PID 값 출력 |
+| 파일 | 실행 | 용도 |
+| --- | --- | --- |
+| [`scan_motor_ids.py`](scripts/scan_motor_ids.py) | `python scripts/scan_motor_ids.py --port /dev/ttyACM0` | SO-101 Feetech ID 1~20 ping |
+| [`scan_lekiwi_motor_ids.py`](scripts/scan_lekiwi_motor_ids.py) | `python -u scripts/scan_lekiwi_motor_ids.py` | LeKiwi 팔·바퀴 ID 1~9 ping |
+| [`read_raw_positions.py`](scripts/read_raw_positions.py) | `python scripts/read_raw_positions.py --port /dev/ttyACM0` | Raw encoder와 torque 상태 출력 |
+| [`read_calibrated_positions.py`](scripts/read_calibrated_positions.py) | `python scripts/read_calibrated_positions.py` | LeRobot 보정 좌표를 degree/percent로 출력 |
+| [`check_lekiwi_calibration_match.py`](scripts/check_lekiwi_calibration_match.py) | `python scripts/check_lekiwi_calibration_match.py` | Calibration 파일과 모터 레지스터 비교 |
+| [`inspect_motor_tuning.py`](scripts/inspect_motor_tuning.py) | `python scripts/inspect_motor_tuning.py` | Acceleration, velocity와 PID 값 출력 |
 
 Pi에 복사된 LeKiwi ID 스캔 스크립트 실행:
 
@@ -186,36 +178,36 @@ python -u ~/scan_lekiwi_motor_ids.py
 
 ### 홈 자세 기록과 이동
 
-| 파일 | 구분 | 실행 | 용도 |
-| --- | --- | --- | --- |
-| [`capture_follower_home_candidate.py`](scripts/capture_follower_home_candidate.py) | 기록 | `python scripts/capture_follower_home_candidate.py --port /dev/ttyACM0` | 현재 Follower 자세를 홈 후보 JSON으로 저장 |
-| [`capture_leader_home_candidate.py`](scripts/capture_leader_home_candidate.py) | 기록 | `python scripts/capture_leader_home_candidate.py --port /dev/ttyACM1 --overwrite` | 현재 Leader 자세를 홈 후보 JSON으로 저장 |
-| [`move_to_home_candidate.py`](scripts/move_to_home_candidate.py) | 구동 | `python scripts/move_to_home_candidate.py --port /dev/ttyACM0` | Follower를 저장된 홈으로 저속 이동 |
-| [`move_leader_to_home_candidate.py`](scripts/move_leader_to_home_candidate.py) | 구동 | `python scripts/move_leader_to_home_candidate.py --port /dev/ttyACM1` | Leader를 저장된 홈으로 저속 이동 |
-| [`move_both_to_home_candidates.py`](scripts/move_both_to_home_candidates.py) | 구동 | `python scripts/move_both_to_home_candidates.py` | Leader와 Follower를 각 홈으로 동시 이동 |
+| 파일 | 실행 | 용도 |
+| --- | --- | --- |
+| [`capture_follower_home_candidate.py`](scripts/capture_follower_home_candidate.py) | `python scripts/capture_follower_home_candidate.py --port /dev/ttyACM0` | 현재 Follower 자세를 홈 후보 JSON으로 저장 |
+| [`capture_leader_home_candidate.py`](scripts/capture_leader_home_candidate.py) | `python scripts/capture_leader_home_candidate.py --port /dev/ttyACM1 --overwrite` | 현재 Leader 자세를 홈 후보 JSON으로 저장 |
+| [`move_to_home_candidate.py`](scripts/move_to_home_candidate.py) | `python scripts/move_to_home_candidate.py --port /dev/ttyACM0` | Follower를 저장된 홈으로 저속 이동 |
+| [`move_leader_to_home_candidate.py`](scripts/move_leader_to_home_candidate.py) | `python scripts/move_leader_to_home_candidate.py --port /dev/ttyACM1` | Leader를 저장된 홈으로 저속 이동 |
+| [`move_both_to_home_candidates.py`](scripts/move_both_to_home_candidates.py) | `python scripts/move_both_to_home_candidates.py` | Leader와 Follower를 각 홈으로 동시 이동 |
 
 홈 이동 스크립트는 현재 위치를 첫 Goal Position으로 기록한 뒤 torque 활성화.
 마지막 Enter 입력 시 torque 해제되므로 팔을 받을 준비 필요
 
 ### FK, IK와 게임패드 dry-run
 
-| 파일 | 구분 | 실행 | 용도 |
-| --- | --- | --- | --- |
-| [`fk_home_candidate.py`](scripts/fk_home_candidate.py) | 계산 | `python scripts/fk_home_candidate.py` | 저장된 홈 자세의 gripper FK 계산 |
-| [`ik_small_steps_dry_run.py`](scripts/ik_small_steps_dry_run.py) | 계산 | `python scripts/ik_small_steps_dry_run.py` | 각 방향 2 mm 이동의 IK 해 검증 |
-| [`inspect_gamepad_axes.py`](scripts/inspect_gamepad_axes.py) | 계산 | `python scripts/inspect_gamepad_axes.py` | 15초 동안 게임패드 전체 axis 출력 |
-| [`gamepad_input_monitor.py`](scripts/gamepad_input_monitor.py) | 계산 | `python scripts/gamepad_input_monitor.py` | DualShock 4 제어 매핑 모니터링 |
-| [`gamepad_ik_dry_run.py`](scripts/gamepad_ik_dry_run.py) | 계산 | `python scripts/gamepad_ik_dry_run.py` | 게임패드 입력부터 IK까지 모터 없이 검증 |
+| 파일 | 실행 | 용도 |
+| --- | --- | --- |
+| [`fk_home_candidate.py`](scripts/fk_home_candidate.py) | `python scripts/fk_home_candidate.py` | 저장된 홈 자세의 gripper FK 계산 |
+| [`ik_small_steps_dry_run.py`](scripts/ik_small_steps_dry_run.py) | `python scripts/ik_small_steps_dry_run.py` | 각 방향 2 mm 이동의 IK 해 검증 |
+| [`inspect_gamepad_axes.py`](scripts/inspect_gamepad_axes.py) | `python scripts/inspect_gamepad_axes.py` | 15초 동안 게임패드 전체 axis 출력 |
+| [`gamepad_input_monitor.py`](scripts/gamepad_input_monitor.py) | `python scripts/gamepad_input_monitor.py` | DualShock 4 제어 매핑 모니터링 |
+| [`gamepad_ik_dry_run.py`](scripts/gamepad_ik_dry_run.py) | `python scripts/gamepad_ik_dry_run.py` | 게임패드 입력부터 IK까지 모터 없이 검증 |
 
 ### Leader/Follower 제어
 
-| 파일 | 구분 | 실행 | 용도 |
-| --- | --- | --- | --- |
-| [`leader_input_dry_run.py`](scripts/leader_input_dry_run.py) | 읽기 | `python scripts/leader_input_dry_run.py --port /dev/ttyACM1` | Follower 없이 Leader 보정 입력 출력 |
-| [`leader_single_joint_test.py`](scripts/leader_single_joint_test.py) | 구동 | `python scripts/leader_single_joint_test.py --joint shoulder_pan` | 선택한 한 관절의 제한된 추종 시험 |
-| [`leader_body_3joint_test.py`](scripts/leader_body_3joint_test.py) | 구동/기록 | `python scripts/leader_body_3joint_test.py --mode body` | 몸통 3축 또는 전체 6축 추종 구현 |
-| [`leader_teleoperation.py`](scripts/leader_teleoperation.py) | 구동/기록 | `python scripts/leader_teleoperation.py --leader-port /dev/ttyACM1 --follower-port /dev/ttyACM0` | 최종 6축 텔레오퍼레이션 진입점 |
-| [`gamepad_forward_back_test.py`](scripts/gamepad_forward_back_test.py) | 구동 | `python scripts/gamepad_forward_back_test.py` | 게임패드 기반 XYZ·손목·gripper 제어 |
+| 파일 | 실행 | 용도 |
+| --- | --- | --- |
+| [`leader_input_dry_run.py`](scripts/leader_input_dry_run.py) | `python scripts/leader_input_dry_run.py --port /dev/ttyACM1` | Follower 없이 Leader 보정 입력 출력 |
+| [`leader_single_joint_test.py`](scripts/leader_single_joint_test.py) | `python scripts/leader_single_joint_test.py --joint shoulder_pan` | 선택한 한 관절의 제한된 추종 시험 |
+| [`leader_body_3joint_test.py`](scripts/leader_body_3joint_test.py) | `python scripts/leader_body_3joint_test.py --mode body` | 몸통 3축 또는 전체 6축 추종 구현 |
+| [`leader_teleoperation.py`](scripts/leader_teleoperation.py) | `python scripts/leader_teleoperation.py --leader-port /dev/ttyACM1 --follower-port /dev/ttyACM0` | 최종 6축 텔레오퍼레이션 진입점 |
+| [`gamepad_forward_back_test.py`](scripts/gamepad_forward_back_test.py) | `python scripts/gamepad_forward_back_test.py` | 게임패드 기반 XYZ·손목·gripper 제어 |
 
 `leader_teleoperation.py`는 내부에서 `leader_body_3joint_test.py --mode teleop`을
 실행하는 짧은 진입점. 데이터 기록 옵션도 그대로 전달 가능
@@ -231,29 +223,29 @@ python scripts/leader_teleoperation.py \
 
 ### LeKiwi host와 베이스 제어
 
-| 파일 | 구분 | 실행 | 용도 |
-| --- | --- | --- | --- |
-| [`start_lekiwi_host_no_cameras.sh`](scripts/start_lekiwi_host_no_cameras.sh) | 구동 | `bash ~/start_lekiwi_host_no_cameras.sh 600` | Pi에서 카메라 없는 LeKiwi host 실행 |
-| [`lekiwi_forward_pulse_test.py`](scripts/lekiwi_forward_pulse_test.py) | 구동 | `python scripts/lekiwi_forward_pulse_test.py --speed 0.02 --duration 0.3` | 짧은 저속 전진 pulse 시험 |
-| [`lekiwi_cardinal_pulse_test.py`](scripts/lekiwi_cardinal_pulse_test.py) | 구동 | `python scripts/lekiwi_cardinal_pulse_test.py --speed 0.02 --duration 0.3` | 전후좌우 짧은 pulse 시험 |
-| [`lekiwi_keyboard_drive.py`](scripts/lekiwi_keyboard_drive.py) | 구동 | `python scripts/lekiwi_keyboard_drive.py` | ZMQ 기반 dead-man WASD 주행 |
+| 파일 | 실행 | 용도 |
+| --- | --- | --- |
+| [`start_lekiwi_host_no_cameras.sh`](scripts/start_lekiwi_host_no_cameras.sh) | `bash ~/start_lekiwi_host_no_cameras.sh 600` | Pi에서 카메라 없는 LeKiwi host 실행 |
+| [`lekiwi_forward_pulse_test.py`](scripts/lekiwi_forward_pulse_test.py) | `python scripts/lekiwi_forward_pulse_test.py --speed 0.02 --duration 0.3` | 짧은 저속 전진 pulse 시험 |
+| [`lekiwi_cardinal_pulse_test.py`](scripts/lekiwi_cardinal_pulse_test.py) | `python scripts/lekiwi_cardinal_pulse_test.py --speed 0.02 --duration 0.3` | 전후좌우 짧은 pulse 시험 |
+| [`lekiwi_keyboard_drive.py`](scripts/lekiwi_keyboard_drive.py) | `python scripts/lekiwi_keyboard_drive.py` | ZMQ 기반 dead-man WASD 주행 |
 
 Pulse와 keyboard client 실행 전 Pi host 필요. 기본 Pi 주소 `10.42.0.2`
 
 ### 카메라와 데이터
 
-| 파일 | 구분 | 실행 | 용도 |
-| --- | --- | --- | --- |
-| [`test_wrist_camera.py`](scripts/test_wrist_camera.py) | 읽기 | `python scripts/test_wrist_camera.py` | Innomaker 카메라 720p MJPG 스트림과 FPS 확인 |
+| 파일 | 실행 | 용도 |
+| --- | --- | --- |
+| [`test_wrist_camera.py`](scripts/test_wrist_camera.py) | `python scripts/test_wrist_camera.py` | Innomaker 카메라 720p MJPG 스트림과 FPS 확인 |
 
 카메라 점검은 모터 포트를 열지 않음. 파일럿 데이터 기록은
 `leader_teleoperation.py --record-one-episode` 사용
 
 ### 모터 설정 변경
 
-| 파일 | 구분 | 실행 | 용도 |
-| --- | --- | --- | --- |
-| [`set_motor_acceleration.py`](scripts/set_motor_acceleration.py) | **변경** | `python scripts/set_motor_acceleration.py` | 몸통·손목 acceleration 50, gripper 20 적용 |
+| 파일 | 실행 | 용도 |
+| --- | --- | --- |
+| [`set_motor_acceleration.py`](scripts/set_motor_acceleration.py) | `python scripts/set_motor_acceleration.py` | 몸통·손목 acceleration 50, gripper 20 적용 |
 
 `set_motor_acceleration.py`는 유일한 모터 레지스터 변경 도구. 일반 점검 과정에서
 실행 금지. 현재 장치에서 가속도 변경에 따른 진동 개선은 거의 없었음
@@ -435,35 +427,6 @@ python ~/check_lekiwi_calibration_match.py
 ```
 
 `lerobot-setup-motors` 재실행, 모터 ID 변경, calibration 덮어쓰기 금지
-
-## 전원과 안전
-
-Pi 부팅 중 확인된 경고:
-
-```text
-This power supply is not capable of supplying 5A; power to peripherals will be restricted
-```
-
-RealSense와 Innomaker 카메라를 동시에 Pi에 연결했을 때 전원 꺼짐 발생. 현재는
-Innomaker 손목 카메라 한 대만 사용. 전면 카메라는 Pi 전원 문제 해결과 저전력
-RGB 카메라 선정 후 추가
-
-- Raspberry Pi 전원과 12V 모터 전원 분리
-- 확인되지 않은 전압, 극성과 전원 분배선 연결 금지
-- 모터 ID 변경 및 기존 캘리브레이션 덮어쓰기 금지
-- 실제 팔이나 바퀴 구동 전 예상 동작과 종료 방법 확인
-- 카메라 연결 후 Pi 재부팅 또는 Ethernet 단절 시 반복 재연결 금지
-- 현재 전원 구성에서 RealSense와 다른 USB 카메라 동시 연결 금지
-- 모터 주변 정리와 비상 전원 차단 경로 확보
-
-## 개발 원칙
-
-- 읽기 전용 진단 우선
-- 한 번에 하나의 장치와 한 단계만 변경
-- 실기 구동 전 명령, 예상 동작, 종료 방법과 주의점 확인
-- 기존 캘리브레이션, 홈 자세와 안전 설정 보존
-- 문제 발생 시 반복 실행보다 전력, 연결과 로그 원인 분석 우선
-- 검증된 키보드 주행 조작감과 x축 보정 유지
 
 프로젝트 경로와 가장 최근의 상세 장치 상태:
 [다음 세션 인수인계](NEXT_SESSION_PROMPT.md)
