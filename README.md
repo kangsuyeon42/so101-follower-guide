@@ -130,7 +130,7 @@ so101-follower-guide/
 ├── NEXT_SESSION_PROMPT.md        # 장치 상태와 다음 세션 인수인계
 ├── config/                       # 검증된 홈 자세와 정렬 설정
 ├── patches/                      # LeRobot 복구 패치
-└── scripts/                      # 점검, 제어와 기록 스크립트
+└── scripts/                      # 점검, 제어와 기록 스크립트 및 설명서
 ```
 
 ## 문서 안내
@@ -142,6 +142,7 @@ so101-follower-guide/
 | [게임패드 제어](GAMEPAD_CONTROL.md) | IK 기반 Follower 제어와 모터 튜닝 기록 |
 | [LeKiwi 키보드 주행](LEKIWI_KEYBOARD_DRIVE.md) | Pi host, 노트북 client와 WASD 주행 |
 | [데이터 수집](DATA_COLLECTION.md) | 손목 카메라 점검과 파일럿 에피소드 기록 |
+| [스크립트 전체 설명](scripts/README.md) | 27개 스크립트의 용도, 안전 구분과 실행 예시 |
 | [다음 세션 인수인계](NEXT_SESSION_PROMPT.md) | 검증된 환경, 장치 상태와 다음 작업 시작점 |
 
 ## 실행 환경
