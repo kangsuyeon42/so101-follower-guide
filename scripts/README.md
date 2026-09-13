@@ -38,6 +38,9 @@ cd ~/so101-follower-guide
 | `gamepad_input_monitor.py` | 계산 전용 | 확인된 DualShock 4 입력 매핑 모니터링 |
 | `gamepad_ik_dry_run.py` | 계산 전용 | 게임패드 입력부터 IK까지 모터 없이 검증 |
 | `test_wrist_camera.py` | 카메라 전용 | Innomaker 손목 카메라 5초 스트림 점검 |
+| `test_body_camera.py` | 카메라 전용 | 노트북에 연결된 Logitech C920 전면 카메라 Pygame 미리보기 |
+| `wrist_camera_stream_server.py` | 카메라 전용 | Pi 손목 카메라 JPEG 스트림 송신 (포트 5560) |
+| `wrist_camera_viewer.py` | 카메라 전용 | 노트북에서 손목 카메라 실시간 표시 |
 | `capture_follower_home_candidate.py` | 파일 기록 | 현재 Follower 자세를 홈 후보 JSON으로 저장 |
 | `capture_leader_home_candidate.py` | 파일 기록 | 현재 Leader 자세를 홈 후보 JSON으로 저장 |
 | `move_to_home_candidate.py` | 실기 구동 | Follower를 저장된 홈 자세로 저속 이동 |
@@ -52,6 +55,10 @@ cd ~/so101-follower-guide
 | `lekiwi_forward_pulse_test.py` | 실기 구동 | 짧은 저속 전진 pulse 시험 |
 | `lekiwi_cardinal_pulse_test.py` | 실기 구동 | 전후좌우 짧은 pulse 시험 |
 | `lekiwi_keyboard_drive.py` | 실기 구동 | ZMQ 기반 dead-man WASD 주행 |
+| `lekiwi_gamepad_drive.py` | 실기 구동 | 왼쪽 스틱 기반 LeKiwi 주행/평행이동/곡선 회전 |
+| `lekiwi_leader_gamepad_teleop.py` | 실기 구동 | Leader 팔 6축과 게임패드 베이스 3축을 공식 9차원 action으로 통합 |
+| `lekiwi_move_arms_to_home.py` | 실기 구동 | Pi host의 Follower와 노트북 Leader를 저장된 홈 자세로 저속 동시 이동 |
+| `lekiwi_practice_ui.py` | 실기 구동 | 전면/손목 영상을 함께 표시하는 무기록 통합 조작 연습 모드 |
 | `set_motor_acceleration.py` | 설정 변경 | SO-101 모터 Acceleration 레지스터 변경 |
 
 ## 1. 모터와 캘리브레이션 점검

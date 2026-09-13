@@ -32,16 +32,16 @@ flowchart LR
     C -->|Ethernet / ZeroMQ| H[LeKiwi Host<br/>Raspberry Pi 5]
     H --> A[SO-101 Follower<br/>ID 1~6]
     H --> B[Omniwheel Base<br/>ID 7~9]
-    W[손목 카메라] --> H
-    F[전면 카메라<br/>추후 추가] --> H
+    W[손목 RGB 카메라<br/>Pi] --> H
+    F[Logitech C920 전면 RGB<br/>노트북] --> C
     C --> D[LeRobotDataset<br/>노트북 저장]
     D --> G[SmolVLA Fine-tuning<br/>GPU PC / Server]
 ```
 
 | 장치 | 역할 |
 | --- | --- |
-| Raspberry Pi 5 | LeKiwi 바퀴, Follower arm, 카메라, LeKiwi host |
-| 노트북 | Leader arm, LeKiwi client, 데이터 저장 |
+| Raspberry Pi 5 | LeKiwi 바퀴, Follower arm, 손목 RGB 카메라, LeKiwi host |
+| 노트북 | Leader arm, 게임패드, C920 전면 RGB 카메라, LeKiwi client, 데이터 저장 |
 | GPU PC 또는 연구실 서버 | SmolVLA 파인튜닝과 평가 |
 
 ### Ethernet
@@ -84,7 +84,7 @@ ssh moai5@10.42.0.2
 관측 데이터:
 
 - 손목 카메라 `observation.images.wrist`
-- 전면 카메라 observation — 전원과 카메라 선정 후 추가 예정
+- 전면 카메라 `observation.images.front` (노트북 연결 Logitech C920)
 - SO-101 Follower 관절 state 6축
 - LeKiwi 베이스 velocity state 3축
 - 자연어 작업 문장
@@ -105,17 +105,17 @@ action과 state의 x축은 반드시 같은 기준 사용. 현재 실제 장착 
 - 노트북–Pi 고정 Ethernet 연결 구성
 - LeKiwi 물리적 앞 방향과 action/state x축 정렬
 - Pi host와 노트북 client 기반 키보드 주행 검증
+- DualShock 4 왼쪽 스틱 기반 베이스 주행 검증
+- Leader arm 6축과 게임패드 베이스 3축의 동시 조작 검증
+- Pi 손목 RGB와 노트북 C920 전면 RGB의 동시 연습 화면 검증
 
 ### 다음 작업
 
-1. Innomaker 손목 카메라 한 대의 Pi 연결과 전력 상태 확인
-2. 안정적인 `/dev/v4l/by-id` 경로, 포맷, 해상도와 FPS 확인
-3. 손목 카메라를 포함한 LeKiwi host/client 텔레오퍼레이션
-4. SO-101 Leader arm과 LeKiwi 베이스 동시 제어
-5. 공식 9차원 action/state와 카메라 observation 정합성 검증
-6. 최초 10개 통합 검증 에피소드 수집
-7. 전면 카메라 추가 후 50개 이상의 고품질 에피소드 수집
-8. `lerobot/smolvla_base` 파인튜닝과 실제 로봇 평가
+1. 성공 에피소드만 저장하는 두 RGB 카메라 통합 기록 UI 구현
+2. 공식 9차원 action/state와 두 카메라 observation 정합성 검증
+3. 최초 10개 통합 검증 에피소드 수집
+4. 50개 이상의 고품질 성공 에피소드 수집
+5. `lerobot/smolvla_base` 파인튜닝과 실제 로봇 평가
 
 ## 저장소 구성
 
@@ -126,6 +126,7 @@ so101-follower-guide/
 ├── LEADER_CONTROL.md             # Leader/Follower 텔레오퍼레이션
 ├── GAMEPAD_CONTROL.md            # IK 기반 게임패드 제어 실험
 ├── LEKIWI_KEYBOARD_DRIVE.md      # LeKiwi WASD 주행
+├── LEKIWI_LEADER_GAMEPAD_PRACTICE.md # Leader+게임패드+두 카메라 연습
 ├── DATA_COLLECTION.md            # 카메라와 파일럿 데이터 기록
 ├── NEXT_SESSION_PROMPT.md        # 장치 상태와 다음 세션 인수인계
 ├── config/                       # 검증된 홈 자세와 정렬 설정
@@ -141,6 +142,7 @@ so101-follower-guide/
 | [Leader/Follower 제어](LEADER_CONTROL.md) | 두 팔 정렬, 단계별 시험과 6축 텔레오퍼레이션 |
 | [게임패드 제어](GAMEPAD_CONTROL.md) | IK 기반 Follower 제어와 모터 튜닝 기록 |
 | [LeKiwi 키보드 주행](LEKIWI_KEYBOARD_DRIVE.md) | Pi host, 노트북 client와 WASD 주행 |
+| [LeKiwi 통합 연습](LEKIWI_LEADER_GAMEPAD_PRACTICE.md) | Leader+게임패드, 두 RGB 카메라와 무기록 연습 UI |
 | [데이터 수집](DATA_COLLECTION.md) | 손목 카메라 점검과 파일럿 에피소드 기록 |
 | [스크립트 전체 설명](scripts/README.md) | 27개 스크립트의 용도와 실행 예시 |
 | [다음 세션 인수인계](NEXT_SESSION_PROMPT.md) | 검증된 환경, 장치 상태와 다음 작업 시작점 |

@@ -17,11 +17,10 @@
 
 ```bash
 conda activate lerobot
-bash ~/start_lekiwi_host_no_cameras.sh 600
+bash ~/start_lekiwi_host_no_cameras.sh
 ```
-
-이 터미널은 계속 켜 둔다. `No command available`은 노트북 명령을 기다리는
-정상 상태다.
+이 터미널은 계속 켜 둔다. 숫자를 생략하면 `Ctrl+C`로 종료할 때까지 실행된다.
+`No command available`은 노트북 명령을 기다리는 정상 상태다.
 
 ### 2. 노트북의 새 터미널
 
@@ -76,4 +75,3 @@ cd ~/lerobot
 git apply ~/so101-follower-guide/patches/lekiwi_physical_front_x_axis.patch
 python -m py_compile src/lerobot/robots/lekiwi/lekiwi.py
 ```
-
