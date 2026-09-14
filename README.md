@@ -4,7 +4,7 @@ SO-101 Leader/Follower와 LeKiwi를 결합한 모바일 매니퓰레이션 프�
 
 목표: LeKiwi로 물체까지 이동 → SO-101 팔로 물체 파지 → 오른쪽에 배치
 
-> Drive to the object, pick it up, and place it to the right.
+> Pick it up, and place it to the bin.
 
 Leader arm으로 Follower arm과 LeKiwi 베이스를 텔레오퍼레이션하고, 카메라와
 9차원 action/state를 하나의 LeRobotDataset으로 기록. 수집한 통합 에피소드로
